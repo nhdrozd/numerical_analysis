@@ -1,0 +1,670 @@
+finish
+/clear
+/prep7
+
+ilel=3		!na ile elementow dzieli wlokna
+! sila=1e-6*4
+
+! fragment odpowiadajacy za liczby losowe
+*get,dim,active,0,time,wall
+dim=dim*3600
+*dim,dummy,array,dim
+*vfill,dummy(1),rand
+*del,dim
+*del,dummy
+
+! miara katow w stopniach
+*afun,deg
+
+! ------------------------------------------------------------------------------------------------------
+! zadeklarowanie podstawowych wartosci
+h1=3.3     	! wysokosc probki
+b1=1.2	! szerokosc probki
+alfa=30		! kat odchylenia wlokien od poziomu
+
+ilc1a=5		! minimalna liczba powierzchni po pierwszym cieciu
+ilc1b=5 		! maksymalna liczba powierzchni po pierwszym cieciu
+
+ilc2a=5		! minimalna liczba powierzchni po drugim cieciu w kazdej powierzchni z pierwszego ciecia
+ilc2b=6		! maksymalna liczba powierzchni po drugim cieciu w kazdej powierzchni z pierwszego ciecia
+
+ilc3a=3		! minimalna liczba powierzchni po trzecim cieciu w kazdej powierzchni z drugiego ciecia
+ilc3b=3		! maksymalna liczba powierzchni po trzecim cieciu w kazdej powierzchni z drugiego ciecia
+
+proc1=0.6*b1/h1  !0.15	! dlugosc podpowierzchni w trakcie ciecia powierzchni (stosunkiem dlugosci powierzchni)
+proc2=0.8*b1/h1  !0.25
+proc3=0.30
+proc4=0.40
+! ------------------------------------------------------------------------------------------------------
+
+! materialy
+m1y=500
+m2y=400
+m3y=300
+m4y=100
+m1p=0.45
+
+! losowanie wymiarow tablic do ciecia probki
+roz1=nint(rand(ilc1a,ilc1b))
+roz2=nint(rand(ilc2a,ilc2b))
+roz3=nint(rand(ilc3a,ilc3b))
+roz4=nint(rand(5,10))
+roz5=nint(rand(5,10))
+
+! tablice na dane do ciecia probki
+*dim,tab1,array,roz1,1
+*dim,tab2,array,roz1,ilc2b+1
+
+
+! wypelnienie tablic danymi do ciecia
+! pierwsze ciecie zawiera sie w pierwszej kolummnie, ktorej ostatnia wartosc to sprawdzenie
+*do,j1,1,roz1-1,1
+  tab1(j1,1)=rand(proc1,proc2)	! zakres procentowy w jakim moze zmieniac sie rozmiar fragmentu w pierwszym cieciu
+  tab1(roz1,1)=tab1(roz1,1)+tab1(j1,1)	! sprawdzenie czy ostatni fragment nie bedzie chcial skonczyc sie poza probka
+*enddo
+
+
+
+! sprawdza czy ostatnia wartosc w tabeli nie przekroczy
+*if,tab1(roz1,1),ge,1,then
+	tab1(roz1-1,1)=tab1(roz1-1,1)-1.5*(tab1(roz1,1)-1)	! zabezpieczenie przed cieciem poza probka, jesli fragment jest za duzy to dopasowuje go do probki
+*else
+*endif
+
+! stworzenie pojedynczego fragmentu preparatu
+rectng,0,b1,0,h1
+
+! stworzenie stempli
+asel,none
+wpcsys,-1,0
+rectng,0,b1,0,-h1/2
+wpoff,0,h1
+csys,4
+rectng,0,b1,0,h1/2
+cm,stemple,area
+allsel
+nummrg,kp
+
+
+
+!
+! !------------------PIERWSZE CIECIE--------------------
+wpcsys,-1,0
+wpoffs,b1		! przesuniecie ukladu w prawy dolny rog probki
+wprota,alfa,-90		! obrocenie ukladu do ciecia
+cmsel,u,stemple
+
+*do,j2,1,roz1-1,1
+  wpoffs,0,0,tab1(j2,1)*h1*cos(alfa)
+  asbw,all
+*enddo
+
+
+
+!------------------DRUGIE CIECIE--------------------
+! przed drugim cieciem trzeba zapelnic tablice wartosci z przesunieciami WP do ciecia
+*do,j3,1,roz1,1
+	*do,j4,2,ilc2b,1
+		tab2(j3,1)=nint(rand(ilc2a,ilc2b))
+		tab2(j3,j4)=rand(proc1,proc2)
+  	tab2(j3,ilc2b+1)=tab2(j3,ilc2b+1)+tab2(j3,j4)
+  *enddo
+	*if,tab2(j3,1),eq,ilc2a,then
+		tab2(j3,ilc2a+1)=0
+	*else
+	*endif
+*enddo
+
+! sprawdza czy ostatnia wartosc w tabeli nie przekroczy szerokosci probki jesli tak to zmniejsza ostatnia wartosc do dozwolonej (w granicy szerokosci probki)
+*do,j5,1,roz1,1
+	*if,tab2(j5,1),eq,ilc2b,and,tab2(j5,ilc2b+1),ge,1,then
+		tab2(j5,ilc2b)=tab2(j5,ilc2b)-(tab2(j5,ilc2b+1)-1)	! zabezpieczenie przed cieciem poza probka, jesli fragment jest za duzy to dopasowuje go do probki
+	*else
+	*endif
+*enddo
+
+! ciecie po raz drugi
+wpcsys,-1,0		!ustawienie ukladu w pozycji poczatkowej
+wprota,0,0,90		!obrocenie ukladu do ciecia
+numcmp,all		!kompresja wszystkich numerow
+allsel
+cmsel,u,stemple
+cm,pow1,area	!komponent z powierzchi po pierwszym cieciu
+
+*do,j6,1,roz1,1
+        cmsel,s,pow1
+	wpcsys,-1,0
+	wprota,0,0,90
+	*get,min_ar,area,0,num,min
+ 	asel,s,,,min_ar
+	*do,j7,2,ilc2b,1
+	  wpoffs,0,0,tab2(j6,j7)*b1
+	  asbw,all
+	*enddo
+*enddo
+
+allsel
+
+
+
+!------------------TRZECIE CIECIE--------------------
+! przed trzecim cieciem trzeba zapelnic tablice wartosci z przesunieciami WP do ciecia
+allsel
+cmsel,u,stemple
+*get,ilpo,area,0,count					! zlicza powierzchnie po drugim cieciu
+*dim,tab3,array,ilpo,ilc3b+1		! tablica na ustawienie WP w trzecim cieciu
+
+! wypelnia tablice danymi do trzeciego ciecia
+*do,j8,1,ilpo,1
+  *do,j9,2,ilc3b,1
+    tab3(j8,1)=nint(rand(ilc3a,ilc3b))
+    tab3(j8,j9)=rand(proc3,proc4)
+    tab3(j8,ilc3b+1)=tab3(j8,ilc3b+1)+tab3(j8,j9)
+  *enddo
+  *if,tab3(j8,1),eq,ilc3a,then
+    tab3(j8,ilc3a+1)=0
+  *else
+  *endif
+*enddo
+
+! sprawdza czy ostatnia wartosc w tabeli nie przekroczy szerokosci probki jesli tak to zmniejsza ostatnia wartosc do dozwolonej (w granicy szerokosci probki)
+*do,j10,1,roz1,1
+  *if,tab3(j10,1),eq,ilc3b,and,tab3(j10,ilc3b+1),ge,1,then
+    tab3(j10,ilc3b)=tab3(j10,ilc3b)-(tab3(j10,ilc3b+1)-1)	! zabezpieczenie przed cieciem poza probka, jesli fragment jest za duzy to dopasowuje go do probki
+  *else
+  *endif
+*enddo
+
+! ciecie po raz drugi
+allsel
+cmsel,u,stemple			! wybiera wszystkie powierzchnie po drugim cieciu
+cm,pow2,area		! tworzy komponent ze wszystkich powierzchni
+allsel
+
+/nerr,0,0,,0,0
+
+*do,j11,1,ilpo,1
+
+  cmsel,s,pow2		! wybiera komponent ze wszystkich powierzchi
+  *get,min_ar2,area,0,num,min	! znajduje powierzchnie o najnizszym numerze
+  asel,r,,,min_ar2	!wybiera te powierzchnie o najnizszym numerze
+  allsel,below,area	! wybiera wszystko pod ta powierzchnia
+  csys,0
+  *get,minx,kp,0,mnloc,x	! szuka punkow o max i min polozeniu po x i po y
+  *get,maxx,kp,0,mxloc,x
+  *get,miny,kp,0,mnloc,y
+  *get,maxy,kp,0,mxloc,y
+  h2=maxy-miny		!ustala wysokosc wybranej powierzchni
+  b2=maxx-minx		!ustala szerokosc wybranej powierzchi
+  h2a=(tan(alfa)*b2)	! poprawka wysokosci wynikajaca z ukosnego ciecia powierzchni
+  wpcsys,-1,0		! ustawia WP zgodnie z ukladem globalnym
+  wplane,1,maxx,miny	! przesuwa WP
+
+!   ---docina powierzchnie lezace u gory probki----
+    cswpla,11,1
+    csys,11
+    ksel,s,loc,x,0.9*h2a
+    *get,ilkp,kp,0,count
+    *if,ilkp,eq,0,then
+        wpoffs,-b2
+    *else
+    *endif
+
+!   ---------------
+
+  wprota,alfa,-90
+  *do,j12,2,ilc3b,1	!samo ciecie w oparciu o dane z tabeli 3
+    wpoffs,0,0,tab3(j11,j12)*(h2-h2a)
+    cmsel,u,stemple
+    asbw,all
+  *enddo
+  cmsel,s,pow2
+  asel,u,,,min_ar2
+  cm,pow2,area
+
+*enddo
+
+allsel
+lplot
+
+/nerr,5,50000,,0,5
+
+! selekcja linii do nadania im wlasciwosci materialowych
+!linie 1 stopnia
+wpcsys,-1,0
+csys,0
+cmsel,u,stemple
+allsel,below,area
+cm,linie,line
+
+allsel
+cmsel,u,linie
+cm,lin_stem,line
+
+cmsel,s,linie
+lsel,r,loc,x,-0.001*b1,0
+cm,li1,line
+cmsel,s,linie
+lsel,r,loc,x,b1,1.001*b1
+cm,li2,line
+cmsel,s,linie
+lsel,r,loc,y,-0.001*h1,0
+cm,li3,line
+cmsel,s,linie
+lsel,r,loc,y,h1,1.001*h1
+cm,li4,line
+cmsel,s,li1
+cmsel,a,li2
+cmsel,a,li3
+cmsel,a,li4
+cm,linie1,line
+cm,linie1a,line
+
+! linie 2 stopnia
+lsel,none
+wpcsys,-1,0
+wpoffs,b1		! przesuniecie ukladu w prawy dolny rog probki
+wprota,alfa,-90
+csys,4
+*do,j14,1,roz1-1,1
+  wpoffs,0,0,tab1(j14,1)*h1*cos(alfa)
+  lsel,a,loc,z,0
+*enddo
+cm,linie2,line
+cm,linie2a,line
+
+! linie 3 stopnia
+lsel,none
+wpcsys,-1,0
+*do,j15,1,roz1,1
+  wpcsys,-1,0
+  *do,j16,2,ilc2b,1
+    csys,4
+    wpoffs,tab2(j15,j16)*b1
+    lsel,a,loc,x,0
+   *enddo
+*enddo
+cmsel,u,linie1
+cmsel,u,lin_stem
+cm,linie3,line
+cm,linie3a,line
+
+! linie 4 stopnia
+allsel
+cmsel,u,linie1
+cmsel,u,linie2
+cmsel,u,linie3
+cmsel,u,lin_stem
+cm,linie4,line
+cm,linie4a,line
+allsel
+
+
+
+/com,zadajemy material
+!! materialy
+et,1,link10,,2,0
+! keyopt,1,3,0
+
+gr1=0.007
+gr2=0.005
+gr3=0.003
+gr4=0.00175
+r,1,3.1415*gr1*gr1/4,!-0.15
+r,2,3.1415*gr2*gr2/4,!-0.15
+r,3,3.1415*gr3*gr3/4,!-0.15
+r,4,3.1415*gr4*gr4/4,!-0.15
+
+
+! zadawanie wielkosci podzialu linii na elementy
+allsel
+cmsel,u,stemple
+allsel,belo,area
+! lesize,all,,,1,,,,,0	!oryginalnie - podzial 1 element na 1 linie
+lesize,all,,,ilel,,,,,1	!podmianka - 5 elementow na 1 linie
+
+csys,0
+
+cmsel,s,stemple
+allsel,belo,area
+lsel,r,loc,x,0
+lsel,r,loc,y,3.3,10
+lesize,all,,,20,0.05,,,,1
+
+cmsel,s,stemple
+allsel,belo,area
+lsel,r,loc,x,1.2
+lsel,r,loc,y,3.3,10
+lesize,all,,,20,20,,,,1
+
+cmsel,s,stemple
+allsel,belo,area
+lsel,r,loc,x,0
+lsel,r,loc,y,-10,0
+lesize,all,,,20,20,,,,1
+
+cmsel,s,stemple
+allsel,belo,area
+lsel,r,loc,x,1.2
+lsel,r,loc,y,-10,0
+lesize,all,,,20,0.05,,,,1
+
+lsel,s,loc,y,-h1/2
+lsel,a,loc,y,1.5*h1
+lesize,all,,,ilel*(roz1-1),,,,,1
+
+/com,premesh
+allsel
+lsel,s,loc,y,0,3.3
+lmesh,all
+
+
+
+nummrg,node
+numcmp,all
+
+
+
+
+! -----linie 1------------------------------------
+cmsel,s,linie1a
+alls,belo,line
+*get,ilem1,line,0,count
+*dim,mat1,array,ilem1,3
+zy1=0.3*m1y
+zp1=0.1*m1p
+
+
+*do,m1,1,ilem1,1
+  cmsel,s,linie1a
+  *get,ilm1,line,0,num,min
+  mat1(m1,1)=ilm1
+  mat1(m1,2)=rand(m1y-zy1,m1y+zy1)
+  mat1(m1,3)=rand(m1p-zp1,m1p+zp1)
+  mp,ex,ilm1,mat1(m1,2)
+  mp,nuxy,ilm1,mat1(m1,3)
+  alls,belo,line
+  emodif,all,mat,ilm1
+  emodif,all,real,1
+
+  cmsel,s,linie1a
+  lsel,u,,,ilm1
+  cm,linie1a,line
+*enddo
+
+
+
+! ----------------------------------------
+
+! -----linie 2------------------------------------
+cmsel,s,linie2a
+*get,ilem2,line,0,count
+*dim,mat2,array,ilem2,3
+zy2=0.3*m2y
+zp1=0.1*m1p
+
+
+*do,m2,1,ilem2,1
+  cmsel,s,linie2a
+  *get,ilm2,line,0,num,min
+  mat2(m2,1)=ilm2
+  mat2(m2,2)=rand(m2y-zy2,m2y+zy2)
+  mat2(m2,3)=rand(m1p-zp1,m1p+zp1)
+  mp,ex,ilm2,mat2(m2,2)
+  mp,nuxy,ilm2,mat2(m2,3)
+  alls,belo,line
+  emodif,all,mat,ilm2
+  emodif,all,real,2
+
+  cmsel,s,linie2a
+  lsel,u,,,ilm2
+  cm,linie2a,line
+*enddo
+
+! ----------------------------------------
+
+! -----linie 3------------------------------------
+cmsel,s,linie3a
+*get,ilem3,line,0,count
+*dim,mat3,array,ilem3,3
+zy3=0.3*m3y
+zp1=0.1*m1p
+
+
+*do,m3,1,ilem3,1
+  cmsel,s,linie3a
+  *get,ilm3,line,0,num,min
+  mat3(m3,1)=ilm3
+  mat3(m3,2)=rand(m3y-zy3,m3y+zy3)
+  mat3(m3,3)=rand(m1p-zp1,m1p+zp1)
+  mp,ex,ilm3,mat3(m3,2)
+  mp,nuxy,ilm3,mat3(m3,3)
+  alls,belo,line
+  emodif,all,mat,ilm3
+  emodif,all,real,3
+
+  cmsel,s,linie3a
+  lsel,u,,,ilm3
+  cm,linie3a,line
+*enddo
+
+! ----------------------------------------
+
+! -----linie 4------------------------------------
+cmsel,s,linie4a
+*get,ilem4,line,0,count
+*dim,mat4,array,ilem4,3
+zy4=0.3*m4y
+zp1=0.1*m1p
+
+
+*do,m4,1,ilem4,1
+  cmsel,s,linie4a
+  *get,ilm4,line,0,num,min
+  mat4(m4,1)=ilm4
+  mat4(m4,2)=rand(m4y-zy4,m4y+zy4)
+  mat4(m4,3)=rand(m1p-zp1,m1p+zp1)
+  mp,ex,ilm4,mat4(m4,2)
+  mp,nuxy,ilm4,mat4(m4,3)
+  alls,belo,line
+  emodif,all,mat,ilm4
+  emodif,all,real,4
+
+  cmsel,s,linie4a
+  lsel,u,,,ilm4
+  cm,linie4a,line
+*enddo
+
+! ----------------------------------------
+
+csys,0
+lsel,s,loc,y,-0.001*h1,0
+lsel,a,loc,y,h1,1.001*h1
+lclear,all
+
+nummrg,node  ! dodane
+numcmp,all
+
+
+
+/AUTO,1
+/REP,FAST
+/pnum,mat,2
+/pnum,mat,0
+/PNUM,KP,0
+/PNUM,LINE,0
+/PNUM,AREA,0
+/PNUM,VOLU,0
+/PNUM,NODE,0
+/PNUM,TABN,0
+/PNUM,SVAL,0
+/PNUM,DOMA,0
+/NUMBER,1
+!*
+/PNUM,MAT,1
+/REPLOT
+
+
+allsel
+eplo
+
+
+! ! stemple objetosciowe
+! cmsel,s,stemple
+! vext,all,,,,,0.2
+! cmsel,s,stemple
+! vext,all,,,,,-0.2
+
+
+
+! asel,s,loc,y,-0.001*h1,0
+! asel,r,loc,z,-0.2,0
+! accat,all
+
+! asel,s,loc,y,-0.001*h1,0
+! asel,r,loc,z,0,0.2
+! accat,all
+
+! asel,s,loc,y,h1,1.001*h1
+! asel,r,loc,z,-0.2,0
+! accat,all
+
+! asel,s,loc,y,h1,1.001*h1
+! asel,r,loc,z,0,0.2
+! accat,all
+
+
+
+! lsel,s,loc,y,-0.001*h1,0
+! lsel,r,loc,z,-0.2
+! lccat,all
+
+lsel,s,loc,y,-0.001*h1,0
+lsel,r,loc,z,0
+lccat,all
+
+! lsel,s,loc,y,-0.001*h1,0
+! lsel,r,loc,z,0.2
+! lccat,all
+
+! lsel,s,loc,y,h1,1.001*h1
+! lsel,r,loc,z,-0.2
+! lccat,all
+
+lsel,s,loc,y,h1,1.001*h1
+lsel,r,loc,z,0
+lccat,all
+
+! lsel,s,loc,y,h1,1.001*h1
+! lsel,r,loc,z,0.2
+! lccat,all
+
+allsel
+! cm,v_stemp,volu
+
+! MATRIX
+asel,s,loc,y,0,3.3
+asel,r,loc,z,0
+cm,matrix,area
+! cmsel,s,matrix
+! vext,all,,,,,0.2
+! cmsel,s,matrix
+! vext,all,,,,,-0.2
+allsel
+
+nummrg,kp
+
+save,geom,db
+! -----------------  koniec geometrii -----------------
+
+! ------------- wlasciwosci materialowe stempli----------
+
+
+
+mp,ex,50000,210000
+mp,nuxy,50000,0.3
+et,2,plane42
+! esize,b1/10
+type,2
+mat,50000
+mshkey,1
+mshmid,2
+cmsel,s,stemple
+amesh,all
+allsel
+eplo
+
+! save,geom1,db
+
+! MATRIX
+vsel,s,loc,y,0,3.3
+mp,ex,50001,3
+mp,nuxy,50001,0.3
+type,2
+mat,50001
+! esize,0.01
+smrtsize,6
+MSHAPE,1,2D 
+mshkey,0
+mshmid,2
+amesh,all
+
+! wezly do ktorych przykładana jest siła
+nsel,s,loc,y,1.5*h1 ! selekcja wszystkich wezlow na koncu stempla
+cm,chwyt,node
+*get,wezly,node,0,count
+*dim,tchwyt,array,wezly			!tabela na numery wezlow tworzace komponent
+*get,minchw,node,0,num,min
+tchwyt(1,1)=minchw
+*do,cwz,2,wezly,1
+	tchwyt(cwz,1)=ndnext(tchwyt(cwz-1,1))
+*enddo
+
+! wezly stabilizujace ruch na boki gornego stempla
+nsel,s,loc,y,1.25*h1,2*h1 ! selekcja wezlow na gorze
+nsel,r,loc,x,0 ! reselekcja
+cm,stab1,node
+*get,wstab1,node,0,count
+*dim,tstab1,array,wstab1			!tabela na numery wezlow tworzace komponent
+*get,minst1,node,0,num,min
+tstab1(1,1)=minst1
+*do,st1,2,wstab1,1
+	tstab1(st1,1)=ndnext(tstab1(st1-1,1))
+*enddo
+
+
+
+nsel,s,loc,y,1.25*h1,2*h1
+nsel,r,loc,x,b1
+cm,stab2,node
+*get,wstab2,node,0,count
+*dim,tstab2,array,wstab2			!tabela na numery wezlow tworzace komponent
+*get,minst2,node,0,num,min
+tstab2(1,1)=minst2
+*do,st2,2,wstab2,1
+	tstab2(st2,1)=ndnext(tstab2(st2-1,1))
+*enddo
+
+
+allsel
+
+*get,nlicz,node,0,count
+*dim,npoz,array,nlicz,4
+*get,mnod,node,0,num,min
+npoz(1,1)=mnod
+npoz(1,2)=nx(npoz(1,1))
+npoz(1,3)=ny(npoz(1,1))
+npoz(1,4)=nz(npoz(1,1))
+
+*do,licz,2,nlicz,1
+	npoz(licz,1)=ndnext(npoz(licz-1,1))
+	npoz(licz,2)=nx(npoz(licz,1))
+	npoz(licz,3)=ny(npoz(licz,1))
+	npoz(licz,4)=nz(npoz(licz,1))
+*enddo
+
+
+save,wlokna,db ! zapisanie geometrii
+
+/input,v6b,mac
+
