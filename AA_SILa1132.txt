@@ -1,0 +1,207 @@
+finish
+/clear,start
+/prep7
+wpoffs,0,0,0
+block,1,10,-15,-30,-1,-10
+kbetw,5,6,,ratio,0.5 ! wybieram punkty na linii na ktorej chce postawic nowy punky,centralnie na srodku
+kwpave,9 ! ustawiam work plane na punkcie nr 9 srodek lini
+!wprota,0,-90,0
+block,-2,2,0,9,0,-9,
+vsbv,1,2
+kbetw,6,4,,ratio,0.75
+kwpave,18
+wprota,0,0,-90
+wpoffs,, 2, ,
+cylind,3,,0,10,0,360
+vsbv,3,1
+kbetw,12,10,,ratio,0.5
+kwpave,19
+wprota,0,0,90
+block,-3,3,0,1,0,6,
+vsbv,5,1
+vdele,2,4,2
+kbetw,37,38,,ratio,0.5
+kwpave,51
+wprota,0,0,-90
+WPOFFS,-2,1.75, ,
+cylind,3.5,,-0.5,0.5,0,360
+vsbv,3,1,
+lstr,66,67
+kbetw,68,69,,ratio,0.5
+kwpave,52
+block,-1.5,1.5,-0.5,0.05,-3.75,10.5
+vsbv,2,1
+/nerr,0,0,,0,0 ! wylaczam komunikat o bledach
+adele,all,,,1 ! kasuje powierzchnie
+/nerr,5,10000,,0,5 ! wlaczam komunikat o bledach
+kbetw,7,6,,ratio,0.5
+kwpave,2
+wpoffs,-1, , ,
+cylind,0.5,,-0.25,0.25,0,360
+vgen,2,1,,,0,-6.5,0
+block,-0.5,0.5,,-6.5,-0.25,0.25
+vadd,1,4
+vadd,5,2
+vsbv,3,1
+aadd,8,18,23,27,28
+wpoffs,,,9,
+cylind,0.5,,-0.25,0.25,0,360
+vgen,2,1,,,0,-6.5,0
+block,-0.5,0.5,,-6.5,-0.25,0.25
+vadd,4,1,3
+vsbv,2,5
+KBETW,36,35,,RATIO,0.5
+KWPAVE,31,
+WPOFFS,-2,1.75,,
+cylind,3.5,,-0.5,0.5,0,360
+VSBV,1,2
+KWPAVE,6,
+SFLDELE,6
+WPOFFS,-0.22,0.22,,
+CYLIND,0.25,,-10,10,270,360
+VSBA,3,22
+AADD,36,42,58
+WPCSYS,0
+block,-5,12,-12,-19.5,5,-12
+VSBV,5,3
+
+!TORZENIE podstawy GÓRY HACZYKA
+k,200,1,-15,-5.5
+LSTRA,200,120
+LSTR,200,119
+AL,2,6,168
+VOFFS,4,9
+!SCIECE BLOCZKA
+BLOCK,-5,30,-17,-7,5,-30
+VSBV,3,5
+
+!tworzenie samego haczyka
+k,201,1,-13,-3.5
+K,202,1,-11.5,-3.5
+K,203,3.5,-13.2,-3.5
+K,204,2.5,-11.5,-3.5
+K,205,3.5,-9.9,-3.5
+K,206,10,-9.9,-3.5
+K,207,4,-8,-3.5
+K,208,6,-8,-3.5
+K,209,2,-9,-3.5
+K,210,8,-8.5,-3.5
+! LINIE LACZACE PUNKTY
+LSTR,118,203
+LSTR,124,201
+LSTR,205,206
+LSTR,207,208
+LSTR,201,202
+LARC,203,205,204
+LARC,208,206,210
+LARC,207,202,209
+!TWORZENIE POWIERZCHNI Z LINI
+AL,2,6,7,9,11,18,20,45,179
+VOFFS,4,-4
+VDELE,1,,,1
+WPCSYS,0,
+LEXTND,150,107,20
+ADRAG,146,,,,,,,37
+VDELE,4,,,1
+VDELE,2,,,1
+ADELE,8,,,1
+LDELE,37,,,1
+
+!PRET
+WPCSYS,1,0
+WPOFFS,8,-28,-7.75
+WPROTA,0,0,-90
+CYLIND,3,,-20,25,0,360
+vglue,all
+NUMMRG,KP,
+
+! KONIEC MODELU 3D
+!MODEL MATERIA£ I SIATKA
+et,1,solid92, !
+mp,ex,1,105000000 !wlasciwosci materialow - tu TYTAN modul younga
+mp,nuxy,1,0.3! wspolczynnik poissona
+mp,ex,2,210000000 ! dla STALI modul younga
+mp,nuxy,2,0.3 ! dla STALI wspolczynnik poissona
+
+type,1 !
+VSEL,S,VOLU,,2
+VSEL,A,VOLU,,3
+VSEL,A,VOLU,,5
+!VSEL,S,VOLU,,4
+!VSEL,A,VOLU,3
+!VSEL,A,VOLU,5
+mat,1 !
+ 
+MOPT, AORDER, ON
+MOPT, EXPND, 1.1
+MOPT, TRANS, 1.5
+!vsel,u,volu,,3,2,5
+ESIZE,0.7
+!AESIZE,42,0.2
+AESIZE,56,0.5
+AESIZE,59,0.5
+AESIZE,60,0.5
+AESIZE,61,0.5
+AESIZE,62,0.5
+AESIZE,79,0.5!
+AESIZE,80,0.5
+AESIZE,81,0.5
+AESIZE,48,0.5
+AESIZE,64,0.5
+AESIZE,69,0.5
+KESIZE,117,2
+KESIZE,119,2
+kESIZE,120,2
+KESIZE,121,2
+KESIZE,122,2
+KESIZE,124,2
+vmesh,all
+MOPT,DEFA
+ALLSEL
+
+type,1 !
+mat,2
+
+vsel,S,volu,,4
+MOPT, AORDER, ON
+MOPT, EXPND, 1.5
+MOPT, TRANS, 1.5
+ESIZE,2
+vmesh,all
+MOPT,DEFA
+ALLSEL
+NUMMRG,KP
+/eof
+csys,0
+nsel,s,loc,x,-17 !selekcjonujemy wezly ktore moceujemy na koncu prawym kosci
+nsel,a,loc,x,28
+d,all,all,0
+
+
+asel,s,area,,42
+nsla,s,1
+
+*get,ile,node,0,count, 
+
+f,all,fx,-200000/ile ! sily wywolywane w tej komendzie pracuja zawsze w globalnym ukladzie wspolrzedych
+
+! TE 3 KOMENDY ZAWSZE MUSZA BYC PRZY KONCU MODELOWANIA !!!!!!!!!!!!!!!!!!!!!
+ALLSEL ! selekcjonuje wszytskie elementy modelu
+NUMMRG,NODE ! merdzuje wezly
+NUMMRG,KP
+NUMCMP,ALL
+/solu
+ANTYPE,0
+TIME,1132
+AUTOTS,OFF
+NSUBST,5
+OUTRES,ALL,ALL
+solve
+
+
+! ilosc elementow 574916 i wezlow 808394
+
+
+
+
+
