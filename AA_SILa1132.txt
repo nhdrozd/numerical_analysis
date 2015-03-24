@@ -14,7 +14,6 @@ wprota,0,0,-90
 wpoffs,, 2, ,
 cylind,3,,0,10,0,360
 vsbv,3,1
-! stupid variable
 kbetw,12,10,,ratio,0.5
 kwpave,19
 wprota,0,0,90
@@ -66,7 +65,7 @@ WPCSYS,0
 block,-5,12,-12,-19.5,5,-12
 VSBV,5,3
 
-!TORZENIE podstawy G”RY HACZYKA
+!TORZENIE podstawy G√ìRY HACZYKA
 k,200,1,-15,-5.5
 LSTRA,200,120
 LSTR,200,119
@@ -117,7 +116,7 @@ vglue,all
 NUMMRG,KP,
 
 ! KONIEC MODELU 3D
-!MODEL MATERIA£ I SIATKA
+!MODEL MATERIA≈Å I SIATKA
 et,1,solid92, !
 mp,ex,1,105000000 !wlasciwosci materialow - tu TYTAN modul younga
 mp,nuxy,1,0.3! wspolczynnik poissona
@@ -164,9 +163,6 @@ type,1 !
 mat,2
 
 vsel,S,volu,,4
-
-!this is a stupid comment :) 
-
 MOPT, AORDER, ON
 MOPT, EXPND, 1.5
 MOPT, TRANS, 1.5
