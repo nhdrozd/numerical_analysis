@@ -1,0 +1,262 @@
+finish
+/clear
+/prep7
+
+resume,wlokna,db
+! /nerr,,,0,0
+/uis,msgpop,3
+
+i=
+j=
+k=
+
+! *ask,sila,'sila obciazajaca model',3.5
+! *ask,czas,'ile krokow czasowych',7
+sila=3.5
+czas=7
+*get,ilnoall,node,0,count
+
+krok_sila=sila/czas
+
+esel,s,type,,1
+cm,ewlok,elem
+cm,ewkill,elem   !komponent elementow ktore beda wylaczone w dalszych obliczeniach
+*get,ilem,elem,0,count
+
+esel,s,mat,,50000
+cm,estem,elem
+*get,ilest,elem,0,count
+
+esel,s,mat,,50001
+cm,ematx,elem
+*get,ilemtx,elem,0,count
+
+
+*dim,wlok1,array,ilem,4,czas
+*dim,stem1,array,ilest,6,czas
+*dim,matx1,array,ilemtx,5,czas
+*dim,displa,array,ilnoall,3,czas
+*dim,kilo,array,ilem,5,czas
+allsel
+
+! ! stemple do mocowania probki
+nsel,s,loc,y,-h1/2 ! selekcja wezlow na dole
+d,all,all,0 ! zamocowanie wezlow na dole stempla
+
+cmsel,s,stab1
+d,all,ux,0 ! zamocowanie wezlow na gornym stemplu
+d,all,uz,0
+
+cmsel,s,stab2
+d,all,ux,0
+d,all,uz,0
+
+cmsel,s,chwyt
+f,all,fy,krok_sila/wezly
+
+
+! pierwsze obliczenia - potem w petli
+/solu
+antype,static
+solcontrol,on
+nlgeom,on
+! cnvtol,u
+autots,on
+! nropt,full
+nsubs,50,10000,1
+outres,all,all
+allsel
+solve
+
+/post1
+set,last
+allsel
+
+!zapisanie przemieszczen wszystkich wezlow po kroku obciazeniowym
+k=
+i=1
+*do,k,1,ilnoall,1
+	displa(k,1,i)=ux(k)
+	displa(k,2,i)=uy(k)
+	displa(k,3,i)=uz(k)
+*enddo
+
+!zapisanie naprezen osiowych i odksztalcen dla wlokien
+etable,osiow,s,axl 
+etable,odkszt,epel,axl
+
+cmsel,s,ewlok
+cm,ewlok1,elem
+
+j=
+*do,j,1,ilem,1
+	cmsel,s,ewlok1
+	*get,wlok1(j,1,i),elem,0,num,min
+	esel,s,,,wlok1(j,1,i)
+	alls,belo,elem
+	*get,wlok1(j,2,i),node,0,num,min
+	*get,wlok1(j,3,i),node,0,num,max
+	*get,wlok1(j,4,i),elem,wlok1(j,1,i),attr,mat
+	cmsel,s,ewlok1
+	esel,u,,,wlok1(j,1,i)
+	cm,ewlok1,elem		
+*enddo
+
+!zapisanie elementow stempli wraz z wezlami i materialem do tabeli
+cmsel,s,estem
+cm,estem1,elem
+j=
+*do,j,1,ilest,1
+	cmsel,s,estem1
+	*get,stem1(j,1,i),elem,0,num,min
+	esel,s,,,stem1(j,1,i)
+	alls,belo,elem
+	!*get,stem1(j,2,i),node,0,num,min
+	stem1(j,2,i)=nelem(stem1(j,1,i),1)
+	stem1(j,3,i)=nelem(stem1(j,1,i),2)!ndnext(stem1(j,2,i))
+	stem1(j,4,i)=nelem(stem1(j,1,i),3)!ndnext(stem1(j,3,i))
+	stem1(j,5,i)=nelem(stem1(j,1,i),4)!ndnext(stem1(j,4,i))
+	stem1(j,6,i)=50000
+	cmsel,s,estem1
+	esel,u,,,stem1(j,1,i)
+	cm,estem1,elem		
+*enddo
+
+!zapisanie elementow macierzy wraz z wezlami i materialem do tabeli
+cmsel,s,ematx
+cm,ematx1,elem
+j=
+*do,j,1,ilemtx,1
+	cmsel,s,ematx1
+	*get,matx1(j,1,i),elem,0,num,min
+	esel,s,,,matx1(j,1,i)
+	alls,belo,elem
+	!*get,matx1(j,2,i),node,0,num,min
+	matx1(j,2,i)=nelem(matx1(j,1,i),1)
+	matx1(j,3,i)=nelem(matx1(j,1,i),2)!ndnext(matx1(j,2,i))
+	matx1(j,4,i)=nelem(matx1(j,1,i),3)!ndnext(matx1(j,3,i))
+	matx1(j,5,i)=50001
+	cmsel,s,ematx1
+	esel,u,,,matx1(j,1,i)
+	cm,ematx1,elem		
+*enddo
+
+! /input,v6b_temp,mac
+	
+! -----------------------------------------------
+! /eof
+
+*do,i,2,czas,1
+! i=1
+
+	! wylaczanie elementow wlokien
+	/input,v6b_kill,mac	
+	
+	!obciazenie i rozwiazanie modelu
+	/input,v6b_load,mac
+	
+	/solu
+	antype,static
+	solcontrol,on
+	nlgeom,on
+	! cnvtol,u
+	autots,on
+	! nropt,full
+	nsubs,50,10000,1
+	outres,all,all
+	! allsel
+	solve
+	
+	/post1
+	set,last
+	allsel
+	
+	!zapisanie przemieszczen wszystkich wezlow po kroku obciazeniowym
+	k=
+	*do,k,1,ilnoall,1
+		displa(k,1,i)=ux(k)
+		displa(k,2,i)=uy(k)
+		displa(k,3,i)=uz(k)
+	*enddo
+	
+	!zapisanie naprezen osiowych i odksztalcen dla wlokien
+	etable,osiow,s,axl 
+	etable,odkszt,epel,axl
+	
+	cmsel,s,ewlok
+	cm,ewlok1,elem
+	
+	j=
+	*do,j,1,ilem,1
+		cmsel,s,ewlok1
+		*get,wlok1(j,1,i),elem,0,num,min
+		esel,s,,,wlok1(j,1,i)
+		alls,belo,elem
+		*get,wlok1(j,2,i),node,0,num,min
+		*get,wlok1(j,3,i),node,0,num,max
+		*get,wlok1(j,4,i),elem,wlok1(j,1,i),attr,mat
+		cmsel,s,ewlok1
+		esel,u,,,wlok1(j,1,i)
+		cm,ewlok1,elem		
+	*enddo
+	
+	
+
+	!zapisanie elementow stempli wraz z wezlami i materialem do tabeli
+	cmsel,s,estem
+	cm,estem1,elem
+	j=
+	*do,j,1,ilest,1
+		cmsel,s,estem1
+		*get,stem1(j,1,i),elem,0,num,min
+		esel,s,,,stem1(j,1,i)
+		alls,belo,elem
+		!*get,stem1(j,2,i),node,0,num,min
+		stem1(j,2,i)=nelem(stem1(j,1,i),1)
+		stem1(j,3,i)=nelem(stem1(j,1,i),2)!ndnext(stem1(j,2,i))
+		stem1(j,4,i)=nelem(stem1(j,1,i),3)!ndnext(stem1(j,3,i))
+		stem1(j,5,i)=nelem(stem1(j,1,i),4)!ndnext(stem1(j,4,i))
+		stem1(j,6,i)=50000
+		cmsel,s,estem1
+		esel,u,,,stem1(j,1,i)
+		cm,estem1,elem		
+	*enddo
+	
+	!zapisanie elementow macierzy wraz z wezlami i materialem do tabeli
+	cmsel,s,ematx
+	cm,ematx1,elem
+	j=
+	*do,j,1,ilemtx,1
+		cmsel,s,ematx1
+		*get,matx1(j,1,i),elem,0,num,min
+		esel,s,,,matx1(j,1,i)
+		alls,belo,elem
+		!*get,matx1(j,2,i),node,0,num,min
+		matx1(j,2,i)=nelem(matx1(j,1,i),1)
+		matx1(j,3,i)=nelem(matx1(j,1,i),2)!ndnext(matx1(j,2,i))
+		matx1(j,4,i)=nelem(matx1(j,1,i),3)!ndnext(matx1(j,3,i))
+		matx1(j,5,i)=50001
+		cmsel,s,ematx1
+		esel,u,,,matx1(j,1,i)
+		cm,ematx1,elem		
+	*enddo
+	
+	! allsel
+	! esel,s,type,,1
+	/show,jpeg
+	cmsel,s,zywe
+	eplo
+	allsel
+	esel,s,type,,1
+	
+	! pletab,osiow,noavg
+	! pletab,odkszt,noavg
+	/rep
+	/show,3d
+	
+
+*enddo
+
+esel,s,type,,1
+save,soluto,db
+
